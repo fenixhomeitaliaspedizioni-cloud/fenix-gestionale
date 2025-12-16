@@ -36,11 +36,18 @@
                     </div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle fs-5"></i></a>
+                    <a class="nav-link" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle fs-5"></i> <span id="userNameHeader" class="d-none d-md-inline"></span></a>
                     <div class="dropdown-menu dropdown-menu-end">
-                        <a class="dropdown-item" href="#" onclick="showPage('view-impostazioni')"><i class="bi bi-gear"></i> Impostazioni</a>
+                        <div class="dropdown-header" id="userInfoHeader">
+                            <strong id="userNameDropdown">Utente</strong><br>
+                            <small class="text-muted" id="userEmailDropdown">email@esempio.it</small>
+                        </div>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" href="#"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                        <a class="dropdown-item" href="#" onclick="showPage('view-impostazioni')"><i class="bi bi-gear"></i> Impostazioni</a>
+                        <a class="dropdown-item" href="#" onclick="showPage('view-my-listini')"><i class="bi bi-tag"></i> I Miei Listini</a>
+                        <a class="dropdown-item" href="#" onclick="cambiaPassword()"><i class="bi bi-key"></i> Cambia Password</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</a>
                     </div>
                 </li>
             </ul>
@@ -56,10 +63,10 @@
         </div>
         <div class="sidebar-wrapper">
             <div class="user-panel d-flex align-items-center">
-                <div class="image"><img src="https://via.placeholder.com/45/d32f2f/fff?text=F" class="rounded-circle" alt="Logo"></div>
+                <div class="image"><img src="https://via.placeholder.com/45/d32f2f/fff?text=U" class="rounded-circle" alt="User" id="userAvatar"></div>
                 <div class="info ms-3">
-                    <span class="d-block fw-bold text-white">Fenix Home Italia</span>
-                    <small class="text-success"><i class="bi bi-circle-fill" style="font-size:8px"></i> Online</small>
+                    <span class="d-block fw-bold text-white" id="sidebarUserName">Caricamento...</span>
+                    <small class="text-success" id="sidebarUserRole"><i class="bi bi-circle-fill" style="font-size:8px"></i> Online</small>
                 </div>
             </div>
             <nav class="mt-3">
@@ -95,8 +102,19 @@
                             <li class="nav-item"><a href="#" class="nav-link" onclick="importaOrdini('amazon')"><i class="nav-icon bi bi-box text-warning"></i><p>Amazon</p></a></li>
                         </ul>
                     </li>
+                    <li class="nav-header mt-3 admin-only">AMMINISTRAZIONE</li>
+                    <li class="nav-item admin-only">
+                        <a href="#" class="nav-link"><i class="nav-icon bi bi-shield-lock text-danger"></i><p>Admin <i class="nav-arrow bi bi-chevron-right"></i></p></a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item"><a href="#" class="nav-link" onclick="showPage('view-admin-users')"><i class="nav-icon bi bi-people"></i><p>Gestione Utenti</p></a></li>
+                            <li class="nav-item"><a href="#" class="nav-link" onclick="showPage('view-admin-listini')"><i class="nav-icon bi bi-tags"></i><p>Listini Prezzi</p></a></li>
+                            <li class="nav-item"><a href="#" class="nav-link" onclick="showPage('view-admin-tariffe')"><i class="nav-icon bi bi-currency-euro"></i><p>Tariffe Corrieri</p></a></li>
+                            <li class="nav-item"><a href="#" class="nav-link" onclick="showPage('view-admin-activity')"><i class="nav-icon bi bi-clock-history"></i><p>Log Attività</p></a></li>
+                        </ul>
+                    </li>
                     <li class="nav-header mt-3">SISTEMA</li>
                     <li class="nav-item"><a href="#" class="nav-link" onclick="showPage('view-impostazioni')"><i class="nav-icon bi bi-gear"></i><p>Impostazioni</p></a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" onclick="showPage('view-my-listini')"><i class="nav-icon bi bi-tag"></i><p>I Miei Listini</p></a></li>
                 </ul>
             </nav>
         </div>
@@ -1238,6 +1256,138 @@
             </div>
         </div>
 
+        <!-- ======================== ADMIN PAGES ======================== -->
+        
+        <!-- ADMIN: Gestione Utenti -->
+        <div id="view-admin-users" class="page-view">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0"><i class="bi bi-people text-danger"></i> Gestione Utenti</h4>
+                <button class="btn btn-danger" onclick="apriModalNuovoUtente()">
+                    <i class="bi bi-plus-lg"></i> Nuovo Utente
+                </button>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tableUtenti">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Azienda</th>
+                                    <th>Ruolo</th>
+                                    <th>Stato</th>
+                                    <th>Ultimo Accesso</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="utentiTableBody">
+                                <tr><td colspan="8" class="text-center py-4">Caricamento...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ADMIN: Listini Prezzi -->
+        <div id="view-admin-listini" class="page-view">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0"><i class="bi bi-tags text-danger"></i> Gestione Listini Prezzi</h4>
+                <button class="btn btn-danger" onclick="apriModalNuovoListino()">
+                    <i class="bi bi-plus-lg"></i> Nuovo Listino
+                </button>
+            </div>
+            
+            <div class="row g-3" id="listiniGrid">
+                <div class="col-12 text-center py-4">Caricamento...</div>
+            </div>
+        </div>
+        
+        <!-- ADMIN: Tariffe Corrieri -->
+        <div id="view-admin-tariffe" class="page-view">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0"><i class="bi bi-currency-euro text-danger"></i> Tariffe Base Corrieri</h4>
+            </div>
+            
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Queste sono le tariffe base utilizzate per il calcolo automatico dei costi.
+                Per prezzi personalizzati per cliente, crea un <a href="#" onclick="showPage('view-admin-listini')">Listino Prezzi</a>.
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Corriere</th>
+                                    <th>Tariffa Base</th>
+                                    <th>€/Kg</th>
+                                    <th>Contrassegno</th>
+                                    <th>Assicurazione %</th>
+                                    <th>Express</th>
+                                    <th>Attivo</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tariffeTableBody">
+                                <tr><td colspan="8" class="text-center py-4">Caricamento...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ADMIN: Log Attività -->
+        <div id="view-admin-activity" class="page-view">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0"><i class="bi bi-clock-history text-danger"></i> Log Attività</h4>
+                <button class="btn btn-outline-danger" onclick="caricaActivityLog()">
+                    <i class="bi bi-arrow-repeat"></i> Aggiorna
+                </button>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Utente</th>
+                                    <th>Azione</th>
+                                    <th>Entità</th>
+                                    <th>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityLogBody">
+                                <tr><td colspan="5" class="text-center py-4">Caricamento...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- USER: I Miei Listini -->
+        <div id="view-my-listini" class="page-view">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0"><i class="bi bi-tag text-primary"></i> I Miei Listini Prezzi</h4>
+            </div>
+            
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Qui puoi visualizzare i listini prezzi che ti sono stati assegnati dall'amministratore.
+            </div>
+            
+            <div class="row g-3" id="myListiniGrid">
+                <div class="col-12 text-center py-4">Caricamento...</div>
+            </div>
+        </div>
+
     </main>
 </div>
 
@@ -1287,6 +1437,264 @@
 </div>
 
 <!-- Modal Gestione Utente -->
+<!-- Modal Admin Utente -->
+<div class="modal fade" id="modalAdminUtente" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-person-gear"></i> <span id="modalAdminUtenteTitle">Nuovo Utente</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formAdminUtente">
+                    <input type="hidden" id="adminUtenteId">
+                    
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabUtenteDati">Dati</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabUtentePermessi">Permessi</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabUtenteCorrieri">Corrieri</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabUtenteListini">Listini</a></li>
+                    </ul>
+                    
+                    <div class="tab-content">
+                        <!-- Tab Dati -->
+                        <div class="tab-pane fade show active" id="tabUtenteDati">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Nome *</label>
+                                    <input type="text" class="form-control" id="adminUtenteNome" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Email *</label>
+                                    <input type="email" class="form-control" id="adminUtenteEmail" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Azienda</label>
+                                    <input type="text" class="form-control" id="adminUtenteAzienda">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Telefono</label>
+                                    <input type="text" class="form-control" id="adminUtenteTelefono">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Password</label>
+                                    <input type="password" class="form-control" id="adminUtentePassword" placeholder="Lascia vuoto per non modificare">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Ruolo *</label>
+                                    <select class="form-select" id="adminUtenteRuolo" required>
+                                        <option value="admin">Amministratore</option>
+                                        <option value="operatore">Operatore</option>
+                                        <option value="cliente" selected>Cliente</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Stato</label>
+                                    <select class="form-select" id="adminUtenteStato">
+                                        <option value="attivo">Attivo</option>
+                                        <option value="disattivo">Disattivato</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab Permessi -->
+                        <div class="tab-pane fade" id="tabUtentePermessi">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="permCreateShipments" checked>
+                                        <label class="form-check-label" for="permCreateShipments">
+                                            <i class="bi bi-box-seam text-primary"></i> Può creare spedizioni
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="permViewAllShipments">
+                                        <label class="form-check-label" for="permViewAllShipments">
+                                            <i class="bi bi-eye text-info"></i> Vede tutte le spedizioni
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="permManageDistinte">
+                                        <label class="form-check-label" for="permManageDistinte">
+                                            <i class="bi bi-file-earmark-ruled text-success"></i> Gestisce distinte
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="permViewContrassegni">
+                                        <label class="form-check-label" for="permViewContrassegni">
+                                            <i class="bi bi-cash-coin text-warning"></i> Vede contrassegni
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="permViewReports">
+                                        <label class="form-check-label" for="permViewReports">
+                                            <i class="bi bi-bar-chart text-primary"></i> Vede report
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="permViewCosts">
+                                        <label class="form-check-label" for="permViewCosts">
+                                            <i class="bi bi-currency-euro text-danger"></i> Vede costi spedizione
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="permAccessShopify">
+                                        <label class="form-check-label" for="permAccessShopify">
+                                            <i class="bi bi-shop text-success"></i> Accesso Shopify
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab Corrieri -->
+                        <div class="tab-pane fade" id="tabUtenteCorrieri">
+                            <p class="text-muted mb-3">Seleziona i corrieri che questo utente può utilizzare:</p>
+                            <div class="row g-2" id="corrieriCheckboxes">
+                                <!-- Generato dinamicamente -->
+                            </div>
+                        </div>
+                        
+                        <!-- Tab Listini -->
+                        <div class="tab-pane fade" id="tabUtenteListini">
+                            <p class="text-muted mb-3">Seleziona i listini prezzi visibili a questo utente:</p>
+                            <div class="row g-2" id="listiniCheckboxes">
+                                <!-- Generato dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-danger" onclick="salvaAdminUtente()"><i class="bi bi-check-lg"></i> Salva</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Admin Listino -->
+<div class="modal fade" id="modalAdminListino" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-tags"></i> <span id="modalAdminListinoTitle">Nuovo Listino</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formAdminListino">
+                    <input type="hidden" id="adminListinoId">
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Nome Listino *</label>
+                            <input type="text" class="form-control" id="adminListinoNome" required placeholder="es. BRT Premium">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Corriere *</label>
+                            <select class="form-select" id="adminListinoCorriere" required>
+                                <option value="">Seleziona...</option>
+                                <option value="BRT">BRT</option>
+                                <option value="GLS">GLS</option>
+                                <option value="SDA">SDA</option>
+                                <option value="DHL">DHL</option>
+                                <option value="UPS">UPS</option>
+                                <option value="FedEx">FedEx</option>
+                                <option value="TNT">TNT</option>
+                                <option value="Poste Italiane">Poste Italiane</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Descrizione</label>
+                            <input type="text" class="form-control" id="adminListinoDescrizione" placeholder="es. Per clienti premium">
+                        </div>
+                    </div>
+                    
+                    <h6 class="mb-3"><i class="bi bi-table"></i> Voci Listino</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered" id="tableListinoVoci">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Zona</th>
+                                    <th>Peso Da (kg)</th>
+                                    <th>Peso A (kg)</th>
+                                    <th>Prezzo (€)</th>
+                                    <th>Suppl. Carburante</th>
+                                    <th>Suppl. Contrassegno</th>
+                                    <th>Suppl. Assicurazione</th>
+                                    <th width="50"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="listino VociBody">
+                                <!-- Righe dinamiche -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="aggiungiVoceListino()">
+                        <i class="bi bi-plus-lg"></i> Aggiungi Voce
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-danger" onclick="salvaAdminListino()"><i class="bi bi-check-lg"></i> Salva Listino</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Dettaglio Listino (per utenti) -->
+<div class="modal fade" id="modalDettaglioListino" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-tag"></i> <span id="dettaglioListinoTitle">Listino</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="dettaglioListinoContent">
+                    <!-- Contenuto dinamico -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cambio Password -->
+<div class="modal fade" id="modalCambioPassword" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-key"></i> Cambia Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCambioPassword">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Password Attuale *</label>
+                        <input type="password" class="form-control" id="currentPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nuova Password *</label>
+                        <input type="password" class="form-control" id="newPassword" required minlength="6">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Conferma Nuova Password *</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-warning" onclick="salvaCambioPassword()"><i class="bi bi-check-lg"></i> Cambia</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="modalUtente" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1491,6 +1899,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<!-- Auth & Admin Script -->
+<script src="./js/auth.js"></script>
 
 </body>
 </html>

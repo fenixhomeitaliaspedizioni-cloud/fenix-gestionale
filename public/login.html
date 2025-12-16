@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Fenix Gestionale Spedizioni</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --fenix-red: #d32f2f;
+            --fenix-red-dark: #b71c1c;
+            --fenix-orange: #ff5722;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            overflow: hidden;
+        }
+        
+        /* Left Panel - Branding */
+        .brand-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            position: relative;
+            background: linear-gradient(135deg, var(--fenix-red-dark) 0%, var(--fenix-red) 50%, var(--fenix-orange) 100%);
+            overflow: hidden;
+        }
+        
+        .brand-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .brand-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: white;
+        }
+        
+        .brand-logo {
+            width: 140px;
+            height: 140px;
+            background: white;
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 40px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        .brand-logo img {
+            width: 100px;
+            height: auto;
+        }
+        
+        .brand-logo i {
+            font-size: 60px;
+            color: var(--fenix-red);
+        }
+        
+        .brand-title {
+            font-size: 52px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -2px;
+            text-shadow: 0 4px 30px rgba(0,0,0,0.3);
+        }
+        
+        .brand-subtitle {
+            font-size: 20px;
+            opacity: 0.95;
+            font-weight: 300;
+            margin-bottom: 50px;
+        }
+        
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            text-align: left;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        
+        /* Right Panel - Login Form */
+        .login-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            background: #0d1117;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+        }
+        
+        .login-header {
+            margin-bottom: 45px;
+        }
+        
+        .login-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+        
+        .login-header p {
+            color: #8b949e;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 28px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #c9d1d9;
+            margin-bottom: 10px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-wrapper i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8b949e;
+            font-size: 18px;
+            transition: color 0.3s;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 16px 18px 16px 55px;
+            background: #161b22;
+            border: 2px solid #30363d;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--fenix-red);
+            background: #1c2128;
+            box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.15);
+        }
+        
+        .form-control:focus + i,
+        .form-control:focus ~ i {
+            color: var(--fenix-red);
+        }
+        
+        .form-control::placeholder {
+            color: #6e7681;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #8b949e;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s;
+        }
+        
+        .password-toggle:hover {
+            color: #c9d1d9;
+        }
+        
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-check-input {
+            width: 18px;
+            height: 18px;
+            background: #161b22;
+            border: 2px solid #30363d;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .form-check-input:checked {
+            background: var(--fenix-red);
+            border-color: var(--fenix-red);
+        }
+        
+        .form-check-label {
+            color: #8b949e;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .forgot-link {
+            color: var(--fenix-red);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .forgot-link:hover {
+            color: var(--fenix-orange);
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--fenix-red) 0%, var(--fenix-orange) 100%);
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(211, 47, 47, 0.4);
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(211, 47, 47, 0.5);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-login .spinner-border {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+        
+        .alert {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .alert-danger {
+            background: rgba(248, 81, 73, 0.15);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            color: #f85149;
+        }
+        
+        .alert-success {
+            background: rgba(63, 185, 80, 0.15);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            color: #3fb950;
+        }
+        
+        .login-footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #6e7681;
+            font-size: 13px;
+        }
+        
+        .login-footer a {
+            color: var(--fenix-red);
+            text-decoration: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .brand-panel {
+                padding: 40px;
+                min-height: 40vh;
+            }
+            
+            .brand-logo {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 25px;
+            }
+            
+            .brand-logo i {
+                font-size: 45px;
+            }
+            
+            .brand-title {
+                font-size: 36px;
+            }
+            
+            .features {
+                display: none;
+            }
+            
+            .login-panel {
+                padding: 40px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Brand Panel -->
+    <div class="brand-panel">
+        <div class="brand-content">
+            <div class="brand-logo">
+                <i class="bi bi-box-seam-fill"></i>
+            </div>
+            <h1 class="brand-title">FENIX</h1>
+            <p class="brand-subtitle">Gestionale Spedizioni Professionale</p>
+            
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon"><i class="bi bi-truck"></i></div>
+                    <span>Gestione multi-corriere integrata</span>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon"><i class="bi bi-shop"></i></div>
+                    <span>Integrazione Shopify automatica</span>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon"><i class="bi bi-graph-up"></i></div>
+                    <span>Report e statistiche in tempo reale</span>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
+                    <span>Accessi personalizzati per cliente</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Login Panel -->
+    <div class="login-panel">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>Bentornato!</h1>
+                <p>Inserisci le tue credenziali per accedere</p>
+            </div>
+            
+            <div class="alert alert-danger" id="alertError">
+                <i class="bi bi-exclamation-circle me-2"></i>
+                <span id="errorMessage"></span>
+            </div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="input-wrapper">
+                        <input type="email" class="form-control" id="email" name="email" 
+                               placeholder="nome@azienda.it" required autocomplete="email">
+                        <i class="bi bi-envelope"></i>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="••••••••" required autocomplete="current-password">
+                        <i class="bi bi-lock"></i>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i class="bi bi-eye" id="toggleIcon"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">Ricordami</label>
+                    </div>
+                    <a href="#" class="forgot-link" onclick="showForgotPassword()">Password dimenticata?</a>
+                </div>
+                
+                <button type="submit" class="btn-login" id="btnLogin">
+                    <span id="btnText">Accedi</span>
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p>© 2025 Fenix Home Italia. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        }
+        
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btnLogin');
+            const btnText = document.getElementById('btnText');
+            const alertError = document.getElementById('alertError');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            // Show loading
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Accesso in corso...';
+            alertError.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password, remember })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store user info
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    sessionStorage.setItem('permissions', JSON.stringify(data.permissions || {}));
+                    
+                    // Redirect based on role
+                    if (data.user.ruolo === 'admin') {
+                        window.location.href = '/';
+                    } else {
+                        window.location.href = '/';
+                    }
+                } else {
+                    showError(data.message || 'Credenziali non valide');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Errore di connessione. Riprova.');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Accedi';
+            }
+        }
+        
+        function showError(message) {
+            const alertError = document.getElementById('alertError');
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            alertError.style.display = 'block';
+        }
+        
+        function showForgotPassword() {
+            alert('Contatta l\'amministratore per reimpostare la password.');
+        }
+        
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/auth/me');
+                const data = await response.json();
+                if (data.success && data.user) {
+                    window.location.href = '/';
+                }
+            } catch (e) {
+                // Not logged in, stay on login page
+            }
+        });
+    </script>
+</body>
+</html>

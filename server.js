@@ -1,21 +1,93 @@
 /* ========================================
    FENIX HOME ITALIA - GESTIONALE SPEDIZIONI
-   server.js - Backend Express.js v2.0
+   server.js - Backend Express.js v3.0
    Con supporto completo per tutte le feature
-   E INTEGRAZIONE SHOPIFY COMPLETA
+   INTEGRAZIONE SHOPIFY + SISTEMA AUTENTICAZIONE
    ======================================== */
 
 const express = require('express');
 const app = express();
 const path = require('path');
 const PDFDocument = require('pdfkit');
+const cookieParser = require('cookie-parser');
 
-// === IMPORTS SHOPIFY ===
+// === IMPORTS ===
 const { ShopifyIntegration, CARRIER_MAPPING, getTrackingUrl } = require('./shopify-integration');
 const shopifyConfig = require('./shopify-config');
+const { router: authRoutes, requireAuth, requireAdmin, requireOperator } = require('./auth-routes');
+const db = require('./database');
 
+// === MIDDLEWARE ===
 app.use(express.json());
+app.use(cookieParser());
+
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// === AUTH ROUTES ===
+app.use('/api', authRoutes);
+
+// === MIDDLEWARE PROTEZIONE PAGINE ===
+// Pagina login sempre accessibile
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// API check auth per frontend
+app.get('/api/check-auth', (req, res) => {
+    const sessionId = req.cookies?.sessionId || req.headers['x-session-id'];
+    if (!sessionId) {
+        return res.json({ authenticated: false });
+    }
+    const session = db.getSession(sessionId);
+    if (!session) {
+        return res.json({ authenticated: false });
+    }
+    res.json({ 
+        authenticated: true, 
+        user: {
+            id: session.user_id,
+            nome: session.nome,
+            email: session.email,
+            ruolo: session.ruolo,
+            azienda: session.azienda
+        }
+    });
+});
+
+// Middleware per proteggere pagine HTML (escluso login e API)
+app.use((req, res, next) => {
+    // Skip per API, login e file statici
+    if (req.path.startsWith('/api') || 
+        req.path === '/login' || 
+        req.path === '/login.html' ||
+        req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+        return next();
+    }
+    
+    // Verifica sessione per altre pagine
+    const sessionId = req.cookies?.sessionId;
+    if (!sessionId) {
+        return res.redirect('/login');
+    }
+    
+    const session = db.getSession(sessionId);
+    if (!session) {
+        res.clearCookie('sessionId');
+        return res.redirect('/login');
+    }
+    
+    // Aggiungi user alla request per eventuali usi
+    req.user = {
+        id: session.user_id,
+        nome: session.nome,
+        email: session.email,
+        ruolo: session.ruolo,
+        azienda: session.azienda
+    };
+    
+    next();
+});
 
 // === INIZIALIZZAZIONE SHOPIFY ===
 let shopifyClient = null;

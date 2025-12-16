@@ -1,7 +1,7 @@
 {
   "name": "fenix-gestionale-spedizioni",
-  "version": "2.0.0",
-  "description": "Gestionale Spedizioni Fenix Home Italia con integrazione Shopify",
+  "version": "3.0.0",
+  "description": "Gestionale Spedizioni Fenix Home Italia con autenticazione e integrazione Shopify",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,19 +13,22 @@
     "tracking",
     "corrieri",
     "logistics",
-    "shopify"
+    "shopify",
+    "autenticazione"
   ],
   "author": "Fenix Home Italia",
   "license": "MIT",
   "dependencies": {
     "express": "^5.1.0",
     "pdfkit": "^0.17.2",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "better-sqlite3": "^11.6.0",
+    "cookie-parser": "^1.4.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   }
 }
