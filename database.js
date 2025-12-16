@@ -9,13 +9,31 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
-// Percorso database
-const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, 'data', 'fenix.db');
+// Percorso database - Render usa /opt/render o la cartella del progetto
+// Su Render free tier il filesystem NON è persistente (si resetta ad ogni deploy)
+// Per persistenza reale serve un database esterno (es. Turso, PlanetScale, etc.)
+let DB_PATH;
 
-// Crea cartella data se non esiste
-const dataDir = path.dirname(DB_PATH);
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+if (process.env.DATABASE_URL) {
+    // Se c'è un database esterno configurato
+    DB_PATH = process.env.DATABASE_URL;
+} else if (process.env.RENDER) {
+    // Su Render, usa la cartella del progetto
+    DB_PATH = path.join(__dirname, 'fenix.db');
+} else {
+    // Sviluppo locale
+    DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, 'data', 'fenix.db');
+    
+    // Crea cartella data se non esiste (solo in locale)
+    const dataDir = path.dirname(DB_PATH);
+    try {
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+    } catch (err) {
+        console.log('⚠️ Impossibile creare cartella data');
+        DB_PATH = path.join(__dirname, 'fenix.db');
+    }
 }
 
 // Inizializza database
