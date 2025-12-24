@@ -492,33 +492,50 @@ function visualizzaDettaglio(id) {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="row">
+                        <div class="row mb-4">
                             <div class="col-md-6">
-                                <h6 class="text-primary fw-bold border-bottom pb-2"><i class="bi bi-person"></i> DESTINATARIO</h6>
-                                <p class="mb-1"><strong>Nome:</strong> ${s.destinatario.nome}</p>
-                                <p class="mb-1"><strong>Indirizzo:</strong> ${s.destinatario.indirizzo}</p>
-                                <p class="mb-1"><strong>CAP/Città:</strong> ${s.destinatario.cap} ${s.destinatario.citta} (${s.destinatario.prov})</p>
-                                <p class="mb-1"><strong>Telefono:</strong> ${s.destinatario.telefono}</p>
-                                ${s.destinatario.email ? '<p class="mb-1"><strong>Email:</strong> '+s.destinatario.email+'</p>' : ''}
+                                <div class="card h-100">
+                                    <div class="card-header bg-primary text-white py-2">
+                                        <i class="bi bi-person-fill"></i> DESTINATARIO
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-1"><strong>Nome:</strong> ${s.destinatario.nome}</p>
+                                        <p class="mb-1"><strong>Indirizzo:</strong> ${s.destinatario.indirizzo}</p>
+                                        <p class="mb-1"><strong>CAP/Città:</strong> ${s.destinatario.cap} ${s.destinatario.citta} (${s.destinatario.prov})</p>
+                                        <p class="mb-1"><strong>Telefono:</strong> ${s.destinatario.telefono}</p>
+                                        ${s.destinatario.email ? '<p class="mb-0"><strong>Email:</strong> '+s.destinatario.email+'</p>' : ''}
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <h6 class="text-warning fw-bold border-bottom pb-2"><i class="bi bi-box"></i> DETTAGLI</h6>
-                                <p class="mb-1"><strong>Corriere:</strong> <span class="badge-courier ${getBadgeClass(s.corriere)}">${s.corriere}</span></p>
-                                <p class="mb-1"><strong>Colli:</strong> ${s.dettagli.colli} - <strong>Peso:</strong> ${s.dettagli.peso} Kg</p>
-                                <p class="mb-1"><strong>Contrassegno:</strong> ${s.dettagli.contrassegno > 0 ? '€ '+s.dettagli.contrassegno.toFixed(2) : 'No'}</p>
-                                <p class="mb-1"><strong>Stato:</strong> <span class="badge ${getStatoClass(s.stato)}">${s.stato}</span></p>
-                                <p class="mb-1"><strong>Tracking:</strong> ${s.tracking ? '<code>'+s.tracking+'</code>' : '<span class="text-muted">Non disponibile</span>'}</p>
-                                ${s.costo ? '<p class="mb-1"><strong>Costo:</strong> € '+s.costo.toFixed(2)+'</p>' : ''}
+                                <div class="card h-100">
+                                    <div class="card-header bg-warning text-dark py-2">
+                                        <i class="bi bi-box-seam"></i> DETTAGLI SPEDIZIONE
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-1"><strong>Corriere:</strong> <span class="badge-courier ${getBadgeClass(s.corriere)}">${s.corriere}</span></p>
+                                        <p class="mb-1"><strong>Colli:</strong> ${s.dettagli.colli} - <strong>Peso:</strong> ${s.dettagli.peso} Kg</p>
+                                        <p class="mb-1"><strong>Contrassegno:</strong> ${s.dettagli.contrassegno > 0 ? '<span class="text-success fw-bold">€ '+s.dettagli.contrassegno.toFixed(2)+'</span>' : '<span class="text-muted">Nessuno</span>'}</p>
+                                        <p class="mb-1"><strong>Stato:</strong> <span class="badge ${getStatoClass(s.stato)}">${s.stato}</span></p>
+                                        <p class="mb-0"><strong>Tracking:</strong> ${s.tracking ? '<code class="bg-light px-2 py-1 rounded">'+s.tracking+'</code>' : '<span class="text-muted">Non disponibile</span>'}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <hr>
-                        <h6 class="fw-bold"><i class="bi bi-geo-alt-fill text-primary"></i> Timeline Tracking</h6>
-                        ${getTrackingTimeline(s)}
+                        
+                        <div class="card">
+                            <div class="card-header bg-light py-2">
+                                <i class="bi bi-geo-alt-fill text-primary"></i> <strong>Timeline Tracking</strong>
+                            </div>
+                            <div class="card-body">
+                                ${getTrackingTimeline(s)}
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
-                        ${s.stato === 'Giacenza' ? '<button class="btn btn-warning" onclick="bootstrap.Modal.getInstance(document.getElementById(\'modalDettaglio\')).hide(); apriModalGiacenza('+s.id+')"><i class="bi bi-tools"></i> Risolvi Giacenza</button>' : ''}
-                        <button class="btn btn-dark" onclick="stampaEtichetta(${s.id})"><i class="bi bi-printer"></i> Stampa</button>
-                        <button class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                        ${s.stato === 'Giacenza' ? '<button type="button" class="btn btn-warning" id="btnRisolviGiacenzaDettaglio" data-id="'+s.id+'"><i class="bi bi-tools"></i> Risolvi Giacenza</button>' : ''}
+                        <button type="button" class="btn btn-dark" onclick="stampaEtichetta(${s.id})"><i class="bi bi-printer"></i> Stampa</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
                     </div>
                 </div>
             </div>
@@ -526,12 +543,28 @@ function visualizzaDettaglio(id) {
     
     $('#modalDettaglio').remove();
     $('body').append(modalHtml);
+    
+    // Aggiungi event listener per il pulsante giacenza
+    const btnGiacenza = document.getElementById('btnRisolviGiacenzaDettaglio');
+    if (btnGiacenza) {
+        btnGiacenza.addEventListener('click', function() {
+            const spedId = this.getAttribute('data-id');
+            bootstrap.Modal.getInstance(document.getElementById('modalDettaglio')).hide();
+            setTimeout(() => apriModalGiacenza(parseInt(spedId)), 300);
+        });
+    }
+    
     new bootstrap.Modal(document.getElementById('modalDettaglio')).show();
 }
 
 function getTrackingTimeline(s) {
     // Genera date simulate basate sulla data della spedizione
-    const dataSpedizione = s.dataObj || new Date(s.data.split('/').reverse().join('-'));
+    let dataSpedizione;
+    try {
+        dataSpedizione = s.dataObj || new Date(s.data.split('/').reverse().join('-'));
+    } catch(e) {
+        dataSpedizione = new Date();
+    }
     
     const steps = [
         { stato: 'In Lavorazione', icon: 'bi-box-seam', label: 'Ordine Ricevuto', sublabel: 'Elaborazione in corso' },
@@ -541,7 +574,7 @@ function getTrackingTimeline(s) {
         { stato: 'Consegnato', icon: 'bi-check-circle-fill', label: 'Consegnato', sublabel: 'Destinazione raggiunta' }
     ];
     
-    // Gestisci stato Giacenza separatamente
+    // Gestisci stato Giacenza
     if (s.stato === 'Giacenza') {
         steps.splice(4, 0, { stato: 'Giacenza', icon: 'bi-exclamation-triangle-fill', label: 'GIACENZA', sublabel: 'Tentativo fallito' });
     }
@@ -549,7 +582,7 @@ function getTrackingTimeline(s) {
     const statiOrdine = ['In Lavorazione', 'Spedito', 'In Transito', 'In Consegna', 'Giacenza', 'Consegnato'];
     const currentIdx = statiOrdine.indexOf(s.stato);
     
-    let html = '<div class="timeline-vertical mt-3">';
+    let html = '<div class="timeline-container">';
     
     steps.forEach((step, i) => {
         const stepIdx = statiOrdine.indexOf(step.stato);
@@ -557,7 +590,7 @@ function getTrackingTimeline(s) {
         const isCurrent = step.stato === s.stato;
         const isGiacenza = step.stato === 'Giacenza';
         
-        // Genera data/ora fittizia per l'evento
+        // Genera data/ora per l'evento
         let eventDate = '';
         if (isCompleted || isCurrent) {
             const d = new Date(dataSpedizione);
@@ -567,48 +600,40 @@ function getTrackingTimeline(s) {
             eventDate = d.toLocaleDateString('it-IT') + ' ' + hours.toString().padStart(2,'0') + ':' + mins.toString().padStart(2,'0');
         }
         
-        let statusClass = 'text-muted';
-        let iconBg = 'bg-light';
+        let iconBgClass = 'bg-secondary';
+        let textClass = 'text-muted';
         if (isCompleted && !isCurrent) {
-            statusClass = 'text-success';
-            iconBg = 'bg-success';
+            iconBgClass = 'bg-success';
+            textClass = 'text-success';
         } else if (isCurrent) {
-            statusClass = isGiacenza ? 'text-warning' : 'text-primary';
-            iconBg = isGiacenza ? 'bg-warning' : 'bg-primary';
+            iconBgClass = isGiacenza ? 'bg-warning' : 'bg-primary';
+            textClass = isGiacenza ? 'text-warning' : 'text-primary';
         }
         
         html += `
-            <div class="timeline-item d-flex mb-3">
-                <div class="timeline-marker me-3 text-center" style="min-width: 50px;">
-                    <div class="rounded-circle ${iconBg} text-white d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+            <div class="d-flex align-items-start mb-3">
+                <div class="flex-shrink-0 me-3" style="width: 50px;">
+                    <div class="rounded-circle ${iconBgClass} ${isGiacenza && isCurrent ? 'text-dark' : 'text-white'} d-flex align-items-center justify-content-center mx-auto" style="width: 42px; height: 42px;">
                         <i class="bi ${step.icon}"></i>
                     </div>
-                    ${i < steps.length - 1 ? '<div class="timeline-line" style="width:2px;height:30px;background:#dee2e6;margin:5px auto;"></div>' : ''}
+                    ${i < steps.length - 1 ? '<div style="width: 2px; height: 25px; background: #dee2e6; margin: 5px auto;"></div>' : ''}
                 </div>
-                <div class="timeline-content flex-grow-1">
-                    <div class="d-flex justify-content-between">
-                        <strong class="${statusClass}">${step.label}</strong>
-                        ${eventDate ? '<small class="text-muted">'+eventDate+'</small>' : '<small class="text-muted">In attesa</small>'}
+                <div class="flex-grow-1 pt-1">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong class="${textClass}">${step.label}</strong>
+                            ${isCurrent ? '<span class="badge bg-primary ms-2" style="animation: pulse 1.5s infinite;">Attuale</span>' : ''}
+                            <br><small class="text-muted">${step.sublabel}</small>
+                        </div>
+                        <small class="text-muted text-end">${eventDate || 'In attesa'}</small>
                     </div>
-                    <small class="${statusClass}">${step.sublabel}</small>
-                    ${isCurrent ? '<span class="badge bg-primary ms-2 pulse-badge">Stato Attuale</span>' : ''}
                 </div>
             </div>
         `;
     });
     
     html += '</div>';
-    
-    // Aggiungi stile per il pulse
-    html += `
-        <style>
-            .pulse-badge { animation: pulse 1.5s infinite; }
-            @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
-            }
-        </style>
-    `;
+    html += '<style>@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }</style>';
     
     return html;
 }
@@ -632,44 +657,83 @@ function stampaEtichetta(id) {
 
 // GESTIONE GIACENZE
 function apriModalGiacenza(id) {
+    console.log('Apertura modal giacenza per ID:', id);
+    
     // Trova la spedizione
     const spedizione = spedizioni.find(s => s.id === id);
     if (!spedizione) {
         showToast('Spedizione non trovata', 'error');
+        console.error('Spedizione non trovata con ID:', id);
         return;
     }
     
-    // Popola modal
-    document.getElementById('giacenzaSpedizioneId').value = spedizione.id;
-    document.getElementById('giacenzaIdDisplay').textContent = spedizione.id;
-    document.getElementById('giacenzaDestinatario').textContent = spedizione.destinatario?.nome || '-';
-    document.getElementById('giacenzaIndirizzo').textContent = 
+    console.log('Spedizione trovata:', spedizione);
+    
+    // Verifica che la modal esista
+    const modalEl = document.getElementById('modalGiacenza');
+    if (!modalEl) {
+        showToast('Errore: modal non trovata', 'error');
+        console.error('Modal giacenza non trovata nel DOM');
+        return;
+    }
+    
+    // Popola modal - con controlli null
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
+                el.value = val || '';
+            } else {
+                el.textContent = val || '-';
+            }
+        } else {
+            console.warn('Elemento non trovato:', id);
+        }
+    };
+    
+    const setCheck = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.checked = val;
+    };
+    
+    setVal('giacenzaSpedizioneId', spedizione.id);
+    setVal('giacenzaIdDisplay', spedizione.id);
+    setVal('giacenzaDestinatario', spedizione.destinatario?.nome);
+    setVal('giacenzaIndirizzo', 
         (spedizione.destinatario?.indirizzo || '') + ', ' + 
         (spedizione.destinatario?.cap || '') + ' ' + 
-        (spedizione.destinatario?.citta || '');
-    document.getElementById('giacenzaCorriere').textContent = spedizione.corriere;
+        (spedizione.destinatario?.citta || ''));
+    setVal('giacenzaCorriere', spedizione.corriere);
     
     // Reset form
-    document.getElementById('giacenzaAzione').value = '';
-    document.getElementById('giacenzaNote').value = '';
-    document.getElementById('giacenzaPreavviso').checked = false;
-    document.getElementById('giacenzaFascia').checked = false;
-    document.getElementById('giacenzaAnnullaContrassegno').checked = false;
-    document.getElementById('giacenzaUrgente').checked = false;
+    setVal('giacenzaAzione', '');
+    setVal('giacenzaNote', '');
+    setCheck('giacenzaPreavviso', false);
+    setCheck('giacenzaFascia', false);
+    setCheck('giacenzaAnnullaContrassegno', false);
+    setCheck('giacenzaUrgente', false);
     
     // Nascondi campi cambio indirizzo
-    document.getElementById('campiCambioIndirizzo').style.display = 'none';
+    const campiIndirizzo = document.getElementById('campiCambioIndirizzo');
+    if (campiIndirizzo) campiIndirizzo.style.display = 'none';
     
     // Pre-popola campi nuovo indirizzo con dati attuali
-    document.getElementById('giacenzaNuovoNome').value = spedizione.destinatario?.nome || '';
-    document.getElementById('giacenzaNuovoIndirizzo').value = spedizione.destinatario?.indirizzo || '';
-    document.getElementById('giacenzaNuovoTelefono').value = spedizione.destinatario?.telefono || '';
-    document.getElementById('giacenzaNuovoCap').value = spedizione.destinatario?.cap || '';
-    document.getElementById('giacenzaNuovoCitta').value = spedizione.destinatario?.citta || '';
-    document.getElementById('giacenzaNuovoProv').value = spedizione.destinatario?.prov || '';
+    setVal('giacenzaNuovoNome', spedizione.destinatario?.nome);
+    setVal('giacenzaNuovoIndirizzo', spedizione.destinatario?.indirizzo);
+    setVal('giacenzaNuovoTelefono', spedizione.destinatario?.telefono);
+    setVal('giacenzaNuovoCap', spedizione.destinatario?.cap);
+    setVal('giacenzaNuovoCitta', spedizione.destinatario?.citta);
+    setVal('giacenzaNuovoProv', spedizione.destinatario?.prov);
     
     // Apri modal
-    new bootstrap.Modal(document.getElementById('modalGiacenza')).show();
+    try {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+        console.log('Modal aperta con successo');
+    } catch (e) {
+        console.error('Errore apertura modal:', e);
+        showToast('Errore apertura finestra', 'error');
+    }
 }
 
 function toggleGiacenzaCampi() {
