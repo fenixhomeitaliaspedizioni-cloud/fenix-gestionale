@@ -2075,6 +2075,303 @@ function applicaRegoleCorriere(order, spedizione) {
 }
 
 // ============================================
+// API GESTIONE GIACENZE
+// ============================================
+
+// Risolvi pratica giacenza
+app.post('/api/giacenza/:id/risolvi', (req, res) => {
+    const id = parseInt(req.params.id);
+    const spedizione = archivioSpedizioni.find(s => s.id === id);
+    
+    if (!spedizione) {
+        return res.status(404).json({ success: false, message: 'Spedizione non trovata' });
+    }
+    
+    const { 
+        azione, 
+        note, 
+        nuovoIndirizzo, 
+        preavvisoTelefonico, 
+        consegnaAppuntamento, 
+        annullaContrassegno,
+        urgente 
+    } = req.body;
+    
+    // Salva storico giacenza
+    if (!spedizione.storicoGiacenze) {
+        spedizione.storicoGiacenze = [];
+    }
+    
+    spedizione.storicoGiacenze.push({
+        data: new Date().toISOString(),
+        azione: azione,
+        note: note,
+        statoPrec: spedizione.stato
+    });
+    
+    // Applica azione
+    switch(azione) {
+        case 'riconsegna':
+            spedizione.stato = 'In Lavorazione';
+            spedizione.noteGiacenza = note;
+            spedizione.preavvisoTelefonico = preavvisoTelefonico;
+            break;
+            
+        case 'cambio_indirizzo':
+            spedizione.stato = 'In Lavorazione';
+            if (nuovoIndirizzo) {
+                if (nuovoIndirizzo.nome) spedizione.destinatario.nome = nuovoIndirizzo.nome;
+                if (nuovoIndirizzo.indirizzo) spedizione.destinatario.indirizzo = nuovoIndirizzo.indirizzo;
+                if (nuovoIndirizzo.cap) spedizione.destinatario.cap = nuovoIndirizzo.cap;
+                if (nuovoIndirizzo.citta) spedizione.destinatario.citta = nuovoIndirizzo.citta;
+                if (nuovoIndirizzo.prov) spedizione.destinatario.prov = nuovoIndirizzo.prov;
+                if (nuovoIndirizzo.telefono) spedizione.destinatario.telefono = nuovoIndirizzo.telefono;
+            }
+            spedizione.noteGiacenza = note;
+            spedizione.preavvisoTelefonico = preavvisoTelefonico;
+            break;
+            
+        case 'reso':
+            spedizione.stato = 'Reso';
+            spedizione.noteGiacenza = note;
+            break;
+            
+        case 'svincolo':
+            spedizione.stato = 'Svincolo';
+            spedizione.noteGiacenza = note;
+            break;
+            
+        case 'distruzione':
+            spedizione.stato = 'Distrutto';
+            spedizione.noteGiacenza = note;
+            break;
+    }
+    
+    // Applica opzioni extra
+    if (annullaContrassegno && spedizione.dettagli) {
+        spedizione.dettagli.contrassegnoOriginale = spedizione.dettagli.contrassegno;
+        spedizione.dettagli.contrassegno = 0;
+        spedizione.statoIncasso = 'Annullato';
+    }
+    
+    if (urgente) {
+        spedizione.priorita = 'urgente';
+    }
+    
+    if (consegnaAppuntamento) {
+        spedizione.consegnaAppuntamento = true;
+    }
+    
+    // Aggiungi notifica
+    archivioNotifiche.unshift({
+        id: archivioNotifiche.length + 1,
+        tipo: 'giacenza',
+        icon: 'bi-check-circle',
+        color: 'success',
+        messaggio: `Giacenza #${id} risolta: ${azione}`,
+        timestamp: new Date(),
+        letta: false
+    });
+    
+    res.json({ 
+        success: true, 
+        message: `Pratica giacenza risolta: ${azione}`,
+        spedizione: spedizione
+    });
+});
+
+// ============================================
+// API EXPORT CSV
+// ============================================
+
+// Export spedizioni CSV
+app.get('/api/export/spedizioni/csv', (req, res) => {
+    const { stato, corriere, dataDa, dataA } = req.query;
+    
+    let spedizioni = archivioSpedizioni.filter(s => s.stato !== 'Cancellata');
+    
+    // Applica filtri
+    if (stato) spedizioni = spedizioni.filter(s => s.stato === stato);
+    if (corriere) spedizioni = spedizioni.filter(s => s.corriere === corriere);
+    if (dataDa) spedizioni = spedizioni.filter(s => s.data >= dataDa);
+    if (dataA) spedizioni = spedizioni.filter(s => s.data <= dataA);
+    
+    // Crea CSV
+    const headers = ['ID', 'Data', 'Corriere', 'Tracking', 'Destinatario', 'Indirizzo', 'CAP', 'Città', 'Prov', 'Telefono', 'Colli', 'Peso', 'Contrassegno', 'Stato', 'Costo'];
+    
+    const rows = spedizioni.map(s => [
+        s.id,
+        s.data,
+        s.corriere,
+        s.tracking || '',
+        s.destinatario?.nome || '',
+        s.destinatario?.indirizzo || '',
+        s.destinatario?.cap || '',
+        s.destinatario?.citta || '',
+        s.destinatario?.prov || '',
+        s.destinatario?.telefono || '',
+        s.dettagli?.colli || 1,
+        s.dettagli?.peso || 0,
+        s.dettagli?.contrassegno || 0,
+        s.stato,
+        s.costo || 0
+    ]);
+    
+    const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=spedizioni_${new Date().toISOString().split('T')[0]}.csv`);
+    res.send('\ufeff' + csv); // BOM per Excel
+});
+
+// Export contrassegni CSV
+app.get('/api/export/contrassegni/csv', (req, res) => {
+    const { stato, dataDa, dataA } = req.query;
+    
+    let spedizioni = archivioSpedizioni.filter(s => 
+        s.dettagli?.contrassegno > 0 && s.stato !== 'Cancellata'
+    );
+    
+    if (stato) spedizioni = spedizioni.filter(s => s.statoIncasso === stato);
+    if (dataDa) spedizioni = spedizioni.filter(s => s.data >= dataDa);
+    if (dataA) spedizioni = spedizioni.filter(s => s.data <= dataA);
+    
+    const headers = ['ID', 'Data', 'Corriere', 'Tracking', 'Destinatario', 'Città', 'Importo', 'Stato Incasso', 'Data Incasso'];
+    
+    const rows = spedizioni.map(s => [
+        s.id,
+        s.data,
+        s.corriere,
+        s.tracking || '',
+        s.destinatario?.nome || '',
+        s.destinatario?.citta || '',
+        s.dettagli?.contrassegno || 0,
+        s.statoIncasso || 'In Attesa',
+        s.dataIncasso || ''
+    ]);
+    
+    const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=contrassegni_${new Date().toISOString().split('T')[0]}.csv`);
+    res.send('\ufeff' + csv);
+});
+
+// Export report finanziario CSV
+app.get('/api/export/finanziario/csv', (req, res) => {
+    const { dataDa, dataA } = req.query;
+    
+    let spedizioni = archivioSpedizioni.filter(s => s.stato !== 'Cancellata');
+    
+    if (dataDa) spedizioni = spedizioni.filter(s => s.data >= dataDa);
+    if (dataA) spedizioni = spedizioni.filter(s => s.data <= dataA);
+    
+    // Calcola totali per corriere
+    const totaliPerCorriere = {};
+    spedizioni.forEach(s => {
+        if (!totaliPerCorriere[s.corriere]) {
+            totaliPerCorriere[s.corriere] = {
+                spedizioni: 0,
+                costi: 0,
+                contrassegni: 0,
+                contrassegniIncassati: 0
+            };
+        }
+        totaliPerCorriere[s.corriere].spedizioni++;
+        totaliPerCorriere[s.corriere].costi += s.costo || 0;
+        totaliPerCorriere[s.corriere].contrassegni += s.dettagli?.contrassegno || 0;
+        if (s.statoIncasso === 'Incassato') {
+            totaliPerCorriere[s.corriere].contrassegniIncassati += s.dettagli?.contrassegno || 0;
+        }
+    });
+    
+    const headers = ['Corriere', 'Num. Spedizioni', 'Costi Totali', 'Contrassegni Totali', 'Contrassegni Incassati'];
+    
+    const rows = Object.entries(totaliPerCorriere).map(([corriere, dati]) => [
+        corriere,
+        dati.spedizioni,
+        dati.costi.toFixed(2),
+        dati.contrassegni.toFixed(2),
+        dati.contrassegniIncassati.toFixed(2)
+    ]);
+    
+    // Aggiungi riga totali
+    const totali = Object.values(totaliPerCorriere).reduce((acc, d) => ({
+        spedizioni: acc.spedizioni + d.spedizioni,
+        costi: acc.costi + d.costi,
+        contrassegni: acc.contrassegni + d.contrassegni,
+        contrassegniIncassati: acc.contrassegniIncassati + d.contrassegniIncassati
+    }), { spedizioni: 0, costi: 0, contrassegni: 0, contrassegniIncassati: 0 });
+    
+    rows.push(['TOTALE', totali.spedizioni, totali.costi.toFixed(2), totali.contrassegni.toFixed(2), totali.contrassegniIncassati.toFixed(2)]);
+    
+    const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=report_finanziario_${new Date().toISOString().split('T')[0]}.csv`);
+    res.send('\ufeff' + csv);
+});
+
+// ============================================
+// API REPORT AVANZATI
+// ============================================
+
+app.get('/api/report/statistiche', (req, res) => {
+    const { dataDa, dataA, corriere } = req.query;
+    
+    let spedizioni = archivioSpedizioni.filter(s => s.stato !== 'Cancellata');
+    
+    if (dataDa) spedizioni = spedizioni.filter(s => s.data >= dataDa);
+    if (dataA) spedizioni = spedizioni.filter(s => s.data <= dataA);
+    if (corriere) spedizioni = spedizioni.filter(s => s.corriere === corriere);
+    
+    // Calcola statistiche
+    const totale = spedizioni.length;
+    const consegnate = spedizioni.filter(s => s.stato === 'Consegnato').length;
+    const giacenze = spedizioni.filter(s => s.stato === 'Giacenza').length;
+    const inTransito = spedizioni.filter(s => ['Spedito', 'In Transito', 'In Consegna'].includes(s.stato)).length;
+    
+    const costoTotale = spedizioni.reduce((sum, s) => sum + (s.costo || 0), 0);
+    
+    const contrassegniTotali = spedizioni.reduce((sum, s) => sum + (s.dettagli?.contrassegno || 0), 0);
+    const contrassegniIncassati = spedizioni
+        .filter(s => s.statoIncasso === 'Incassato')
+        .reduce((sum, s) => sum + (s.dettagli?.contrassegno || 0), 0);
+    const contrassegniPendenti = spedizioni
+        .filter(s => s.statoIncasso === 'In Attesa')
+        .reduce((sum, s) => sum + (s.dettagli?.contrassegno || 0), 0);
+    
+    // Statistiche per corriere
+    const perCorriere = {};
+    spedizioni.forEach(s => {
+        if (!perCorriere[s.corriere]) {
+            perCorriere[s.corriere] = { totale: 0, consegnate: 0, giacenze: 0, costi: 0 };
+        }
+        perCorriere[s.corriere].totale++;
+        if (s.stato === 'Consegnato') perCorriere[s.corriere].consegnate++;
+        if (s.stato === 'Giacenza') perCorriere[s.corriere].giacenze++;
+        perCorriere[s.corriere].costi += s.costo || 0;
+    });
+    
+    res.json({
+        success: true,
+        data: {
+            totale,
+            consegnate,
+            giacenze,
+            inTransito,
+            successRate: totale > 0 ? Math.round((consegnate / totale) * 100) : 0,
+            costoTotale: costoTotale.toFixed(2),
+            contrassegniIncassati: contrassegniIncassati.toFixed(2),
+            contrassegniPendenti: contrassegniPendenti.toFixed(2),
+            contrassegniTotali: contrassegniTotali.toFixed(2),
+            margine: (contrassegniIncassati - costoTotale).toFixed(2),
+            perCorriere
+        }
+    });
+});
+
+// ============================================
 // FALLBACK SPA
 // ============================================
 
@@ -2090,8 +2387,8 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log('');
     console.log('╔════════════════════════════════════════════════╗');
-    console.log('║   FENIX HOME ITALIA - GESTIONALE v2.0          ║');
-    console.log('║   CON INTEGRAZIONE SHOPIFY                     ║');
+    console.log('║   FENIX HOME ITALIA - GESTIONALE v3.0          ║');
+    console.log('║   CON AUTENTICAZIONE E SHOPIFY                 ║');
     console.log('╠════════════════════════════════════════════════╣');
     console.log(`║  ✅ Server attivo: http://localhost:${PORT}         ║`);
     console.log(`║  📦 Spedizioni: ${archivioSpedizioni.length.toString().padEnd(30)}║`);

@@ -95,12 +95,7 @@
                     <li class="nav-item"><a href="#" class="nav-link" onclick="showPage('view-report')"><i class="nav-icon bi bi-bar-chart-line text-primary"></i><p>Report</p></a></li>
                     <li class="nav-header mt-3">INTEGRAZIONI</li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="nav-icon bi bi-shop"></i><p>E-Commerce <i class="nav-arrow bi bi-chevron-right"></i></p></a>
-                        <ul class="nav nav-treeview">
-                            <li class="nav-item"><a href="#" class="nav-link" onclick="showPage('view-shopify')"><i class="nav-icon bi bi-bag text-success"></i><p>Shopify</p></a></li>
-                            <li class="nav-item"><a href="#" class="nav-link" onclick="importaOrdini('woocommerce')"><i class="nav-icon bi bi-wordpress text-primary"></i><p>WooCommerce</p></a></li>
-                            <li class="nav-item"><a href="#" class="nav-link" onclick="importaOrdini('amazon')"><i class="nav-icon bi bi-box text-warning"></i><p>Amazon</p></a></li>
-                        </ul>
+                        <a href="#" class="nav-link" onclick="showPage('view-shopify')"><i class="nav-icon bi bi-bag text-success"></i><p>Shopify</p></a>
                     </li>
                     <li class="nav-header mt-3 admin-only">AMMINISTRAZIONE</li>
                     <li class="nav-item admin-only">
@@ -284,7 +279,11 @@
         <div id="view-elenco-spedizioni" class="page-view">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 id="pageTitle" class="mb-0"><i class="bi bi-table"></i> Elenco Spedizioni</h4>
-                <div><button class="btn btn-success btn-sm me-2" onclick="esportaExcel()"><i class="bi bi-file-excel"></i> Excel</button><button class="btn btn-primary btn-sm" onclick="showPage('view-nuova-spedizione')"><i class="bi bi-plus-lg"></i> Nuova</button></div>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm me-2" onclick="esportaCSV()"><i class="bi bi-file-text"></i> CSV</button>
+                    <button class="btn btn-success btn-sm me-2" onclick="esportaExcel()"><i class="bi bi-file-excel"></i> Excel</button>
+                    <button class="btn btn-primary btn-sm" onclick="showPage('view-nuova-spedizione')"><i class="bi bi-plus-lg"></i> Nuova</button>
+                </div>
             </div>
             <div class="card shadow-sm mb-3">
                 <div class="card-body py-2">
@@ -300,10 +299,25 @@
             </div>
             <div class="card shadow-sm">
                 <div class="card-body p-0">
-                    <table id="mainTable" class="table table-striped table-hover w-100">
-                        <thead class="bg-dark text-white"><tr><th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th><th>ID</th><th>Data</th><th>Corriere</th><th>Destinatario</th><th>Città</th><th>Contrassegno</th><th>Stato</th><th class="text-end">Azioni</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table id="mainTable" class="table table-striped table-hover w-100 mb-0">
+                            <thead class="bg-dark text-white">
+                                <tr>
+                                    <th width="40"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                                    <th>ID</th>
+                                    <th>Data</th>
+                                    <th>Corriere</th>
+                                    <th>Tracking</th>
+                                    <th>Destinatario</th>
+                                    <th>Città</th>
+                                    <th>Contrassegno</th>
+                                    <th>Stato</th>
+                                    <th class="text-end" width="150">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div class="card mt-3 shadow-sm" id="bulkActions" style="display:none">
@@ -456,6 +470,32 @@
                 <h4 class="mb-0"><i class="bi bi-bar-chart-line"></i> Report & Statistiche</h4>
                 <div class="btn-group"><button class="btn btn-outline-secondary active" onclick="cambiaReportPeriodo('settimana')">Settimana</button><button class="btn btn-outline-secondary" onclick="cambiaReportPeriodo('mese')">Mese</button><button class="btn btn-outline-secondary" onclick="cambiaReportPeriodo('anno')">Anno</button></div>
             </div>
+            
+            <!-- Filtri Report -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body py-2">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-2">
+                            <input type="date" class="form-control form-control-sm" id="reportDataDa" onchange="aggiornaReport()">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" class="form-control form-control-sm" id="reportDataA" onchange="aggiornaReport()">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select form-select-sm" id="reportCorriere" onchange="aggiornaReport()">
+                                <option value="">Tutti i corrieri</option>
+                                <option>BRT</option><option>SDA</option><option>GLS</option><option>DHL</option><option>UPS</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-sm btn-outline-primary w-100" onclick="aggiornaReport()">
+                                <i class="bi bi-arrow-repeat"></i> Aggiorna
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="row g-3 mb-4">
                 <div class="col-lg-2 col-md-4"><div class="card text-center shadow-sm"><div class="card-body"><h3 class="text-primary mb-0" id="reportTotaleSpedizioni">0</h3><small>Totali</small></div></div></div>
                 <div class="col-lg-2 col-md-4"><div class="card text-center shadow-sm"><div class="card-body"><h3 class="text-success mb-0" id="reportConsegnate">0</h3><small>Consegnate</small></div></div></div>
@@ -465,12 +505,80 @@
                 <div class="col-lg-2 col-md-4"><div class="card text-center shadow-sm"><div class="card-body"><h3 class="text-success mb-0"><span id="reportSuccessRate">0</span>%</h3><small>Successo</small></div></div></div>
             </div>
             <div class="row g-3 mb-4">
-                <div class="col-lg-8"><div class="card shadow-sm"><div class="card-header bg-white"><h6 class="mb-0">Andamento</h6></div><div class="card-body"><canvas id="reportChartAndamento" height="200"></canvas></div></div></div>
-                <div class="col-lg-4"><div class="card shadow-sm"><div class="card-header bg-white"><h6 class="mb-0">Per Corriere</h6></div><div class="card-body"><canvas id="reportChartCorrieri" height="200"></canvas></div></div></div>
+                <div class="col-lg-8"><div class="card shadow-sm"><div class="card-header bg-white"><h6 class="mb-0">Andamento Spedizioni</h6></div><div class="card-body"><canvas id="reportChartAndamento" height="200"></canvas></div></div></div>
+                <div class="col-lg-4"><div class="card shadow-sm"><div class="card-header bg-white"><h6 class="mb-0">Distribuzione Corrieri</h6></div><div class="card-body"><canvas id="reportChartCorrieri" height="200"></canvas></div></div></div>
             </div>
+            
+            <!-- Report Finanziari -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="bi bi-cash-stack"></i> Report Finanziari</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-success mb-0">€<span id="reportTotaleIncassi">0.00</span></h5>
+                                    <small>Contrassegni Incassati</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-warning mb-0">€<span id="reportTotalePendenti">0.00</span></h5>
+                                    <small>In Attesa Incasso</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-danger mb-0">€<span id="reportTotaleCosti">0.00</span></h5>
+                                    <small>Costi Spedizione</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-primary mb-0">€<span id="reportMargine">0.00</span></h5>
+                                    <small>Margine Netto</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Esportazione Report -->
             <div class="card shadow-sm">
-                <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-download"></i> Esporta</h6></div>
-                <div class="card-body"><div class="row g-3"><div class="col-md-3"><button class="btn btn-outline-success w-100" onclick="esportaReportExcel()"><i class="bi bi-file-excel"></i> Excel</button></div><div class="col-md-3"><button class="btn btn-outline-danger w-100" onclick="esportaReportPDF()"><i class="bi bi-file-pdf"></i> PDF</button></div><div class="col-md-3"><button class="btn btn-outline-secondary w-100" onclick="esportaReportCSV()"><i class="bi bi-file-text"></i> CSV</button></div><div class="col-md-3"><button class="btn btn-outline-primary w-100" onclick="inviaReportEmail()"><i class="bi bi-envelope"></i> Email</button></div></div></div>
+                <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-download"></i> Esporta Report</h6></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100" onclick="esportaReportSpedizioniCSV()">
+                                <i class="bi bi-file-text"></i> Spedizioni CSV
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100" onclick="esportaReportFinanziarioCSV()">
+                                <i class="bi bi-cash-coin"></i> Finanziario CSV
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-danger w-100" onclick="esportaReportPDF()">
+                                <i class="bi bi-file-pdf"></i> Report Completo PDF
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-primary w-100" onclick="esportaReportContrassegniCSV()">
+                                <i class="bi bi-currency-euro"></i> Contrassegni CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1695,6 +1803,132 @@
     </div>
 </div>
 
+<!-- Modal Gestione Giacenza -->
+<div class="modal fade" id="modalGiacenza" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Risolvi Pratica Giacenza</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="giacenzaSpedizioneId">
+                
+                <!-- Info Spedizione -->
+                <div class="alert alert-secondary mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Spedizione:</strong> #<span id="giacenzaIdDisplay"></span><br>
+                            <strong>Destinatario:</strong> <span id="giacenzaDestinatario"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Indirizzo:</strong> <span id="giacenzaIndirizzo"></span><br>
+                            <strong>Corriere:</strong> <span id="giacenzaCorriere"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Azione -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold"><i class="bi bi-arrow-repeat"></i> Azione da eseguire *</label>
+                    <select class="form-select" id="giacenzaAzione" onchange="toggleGiacenzaCampi()">
+                        <option value="">-- Seleziona azione --</option>
+                        <option value="riconsegna">🔄 Rimetti in consegna (stesso indirizzo)</option>
+                        <option value="cambio_indirizzo">📍 Cambio Indirizzo</option>
+                        <option value="reso">↩️ Reso al Mittente</option>
+                        <option value="svincolo">📦 Svincolo/Ritiro in filiale</option>
+                        <option value="distruzione">🗑️ Distruggi merce</option>
+                    </select>
+                </div>
+                
+                <!-- Campi Cambio Indirizzo (nascosti di default) -->
+                <div id="campiCambioIndirizzo" style="display:none;">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light"><i class="bi bi-geo-alt"></i> Nuovo Indirizzo di Consegna</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Nome Destinatario</label>
+                                    <input type="text" class="form-control" id="giacenzaNuovoNome">
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label">Indirizzo *</label>
+                                    <input type="text" class="form-control" id="giacenzaNuovoIndirizzo">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Telefono</label>
+                                    <input type="text" class="form-control" id="giacenzaNuovoTelefono">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">CAP *</label>
+                                    <input type="text" class="form-control" id="giacenzaNuovoCap" maxlength="5">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Città *</label>
+                                    <input type="text" class="form-control" id="giacenzaNuovoCitta">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Prov *</label>
+                                    <input type="text" class="form-control" id="giacenzaNuovoProv" maxlength="2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Note per il corriere -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold"><i class="bi bi-chat-left-text"></i> Note per il Corriere</label>
+                    <textarea class="form-control" id="giacenzaNote" rows="3" placeholder="Istruzioni speciali per il corriere..."></textarea>
+                </div>
+                
+                <!-- Opzioni Extra -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light"><i class="bi bi-gear"></i> Opzioni Extra</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="giacenzaPreavviso">
+                                    <label class="form-check-label" for="giacenzaPreavviso">
+                                        <i class="bi bi-telephone text-primary"></i> Richiedi preavviso telefonico
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="giacenzaFascia">
+                                    <label class="form-check-label" for="giacenzaFascia">
+                                        <i class="bi bi-clock text-info"></i> Consegna su appuntamento
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="giacenzaAnnullaContrassegno">
+                                    <label class="form-check-label" for="giacenzaAnnullaContrassegno">
+                                        <i class="bi bi-cash-coin text-danger"></i> Annulla contrassegno
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="giacenzaUrgente">
+                                    <label class="form-check-label" for="giacenzaUrgente">
+                                        <i class="bi bi-lightning text-warning"></i> Priorità urgente
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-warning" onclick="salvaRisoluzioneGiacenza()">
+                    <i class="bi bi-check-lg"></i> Conferma Azione
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="modalUtente" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1902,6 +2136,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Auth & Admin Script -->
 <script src="./js/auth.js"></script>
+<!-- Features Script (Export, Giacenze, etc.) -->
+<script src="./js/features.js"></script>
 
 </body>
 </html>
